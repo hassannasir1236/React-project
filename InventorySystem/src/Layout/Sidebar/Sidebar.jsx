@@ -25,140 +25,59 @@ import {
 const data = {
   navMain: [
     {
-      title: "Getting Started",
+      title: "Dashboard",
+      url: "#",
+       items: [
+        {
+          title: "Dashboard",
+          url: "#",
+        }
+      ],
+    },
+    {
+      title: "Suppiler",
       url: "#",
       items: [
         {
-          title: "Installation",
+          title: "Add-Suppiler",
           url: "#",
         },
         {
-          title: "Project Structure",
+          title: "Details-Suppiler",
           url: "#",
         },
       ],
     },
     {
-      title: "Building Your Application",
+      title: "Category",
       url: "#",
       items: [
         {
-          title: "Routing",
+          title: "Add-Category",
           url: "#",
-        },
-        {
-          title: "Data Fetching",
-          url: "#",
-          isActive: true,
-        },
-        {
-          title: "Rendering",
-          url: "#",
-        },
-        {
-          title: "Caching",
-          url: "#",
-        },
-        {
-          title: "Styling",
-          url: "#",
-        },
-        {
-          title: "Optimizing",
-          url: "#",
-        },
-        {
-          title: "Configuring",
-          url: "#",
-        },
-        {
-          title: "Testing",
-          url: "#",
-        },
-        {
-          title: "Authentication",
-          url: "#",
-        },
-        {
-          title: "Deploying",
-          url: "#",
-        },
-        {
-          title: "Upgrading",
-          url: "#",
-        },
-        {
-          title: "Examples",
-          url: "#",
-        },
+        }
       ],
     },
     {
-      title: "API Reference",
+      title: "Products",
       url: "#",
       items: [
         {
-          title: "Components",
+          title: "Add-Products",
           url: "#",
-        },
-        {
-          title: "File Conventions",
-          url: "#",
-        },
-        {
-          title: "Functions",
-          url: "#",
-        },
-        {
-          title: "next.config.js Options",
-          url: "#",
-        },
-        {
-          title: "CLI",
-          url: "#",
-        },
-        {
-          title: "Edge Runtime",
-          url: "#",
-        },
+        }
       ],
     },
     {
-      title: "Architecture",
+      title: "Purchase",
       url: "#",
       items: [
         {
-          title: "Accessibility",
+          title: "Add-Purchase",
           url: "#",
-        },
-        {
-          title: "Fast Refresh",
-          url: "#",
-        },
-        {
-          title: "Next.js Compiler",
-          url: "#",
-        },
-        {
-          title: "Supported Browsers",
-          url: "#",
-        },
-        {
-          title: "Turbopack",
-          url: "#",
-        },
+        }
       ],
-    },
-    {
-      title: "Community",
-      url: "#",
-      items: [
-        {
-          title: "Contribution Guide",
-          url: "#",
-        },
-      ],
-    },
+    }
   ],
 }
 

@@ -1,6 +1,6 @@
 // src/pages/dashboard/page.tsx or page.jsx
 
-import AppLayout from "@/Layout"
+import AppLayout from "../../Layout/Index"; 
 import AreaChart from "./Charts/AreaChart"
 import DashboardCards from "./Cards/DashboardCards"
 import ChartBarMultiple from "./Charts/BarChart"

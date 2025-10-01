@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import LoginForm from './pages/Auth/LoginForm'
-import DashboardPage from './Pages/Dashboard/Index'
+// import LoginForm from './pages/Auth/LoginForm'
+// import DashboardPage from './Pages/Dashboard/Index'
+// import SupplierIndex from "./Pages/Supplier/Index";
+// import CategoryIndex from "./Pages/Category/Index";
+// import ProductIndex from "./Pages/Products/Index";
+// import BrandsIndex from "./Pages/Brands/BrandsIndex";
+import SalesIndex from "./Pages/Sales/SalesIndex";
 
 function App() {
   const [count, setCount] = useState(0)
@@ -17,7 +22,7 @@ function App() {
           </div>
           Acme Inc.
         </a> */}
-        <DashboardPage />
+        <SalesIndex />
       {/* </div>
     </div> */}
 

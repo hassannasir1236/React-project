@@ -4,10 +4,10 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()], // 👈 these are Vite plugins
+  plugins: [react(), tailwindcss()], // Vite plugins
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'), // 👈 allows "@/components/..." style imports
+      '@': path.resolve(__dirname, 'src'), // This defines the alias
     },
   },
 })
