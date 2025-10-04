@@ -1,31 +1,34 @@
 import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-// import LoginForm from './pages/Auth/LoginForm'
-// import DashboardPage from './Pages/Dashboard/Index'
-// import SupplierIndex from "./Pages/Supplier/Index";
-// import CategoryIndex from "./Pages/Category/Index";
-// import ProductIndex from "./Pages/Products/Index";
-// import BrandsIndex from "./Pages/Brands/BrandsIndex";
+import LoginForm from './Pages/Auth/LoginForm';
+import DashboardPage from './Pages/Dashboard/Index';
+import SupplierIndex from "./Pages/Supplier/Index";
+import CategoryIndex from "./Pages/Category/Index";
+import ProductIndex from "./Pages/Products/Index";
+import BrandsIndex from "./Pages/Brands/BrandsIndex";
 import SalesIndex from "./Pages/Sales/SalesIndex";
+import PurchaseIndex from "./Pages/Purchase/PurchaseIndex";
+
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-         {/* <div className="bg-gray-700 flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-      <div className="flex w-full max-w-sm flex-col gap-6">
-        <a href="#" className="flex items-center gap-2 self-center font-medium">
-          <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
+          <Routes>
+            <Route path="/" element={<LoginForm />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/supplier" element={<SupplierIndex />} />
+            <Route path="/category" element={<CategoryIndex />} />
+            <Route path="/products" element={<ProductIndex />} />
+            <Route path="/brands" element={<BrandsIndex />} />
+            <Route path="/sales" element={<SalesIndex />} />
+            <Route path="/purchase" element={<PurchaseIndex />} />
 
-          </div>
-          Acme Inc.
-        </a> */}
-        <SalesIndex />
-      {/* </div>
-    </div> */}
-
+          </Routes>
     </>
   )
 }

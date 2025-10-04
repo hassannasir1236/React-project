@@ -1,13 +1,13 @@
 // src/Layout/Sidebar/Sidebar.jsx
 
-import * as React from "react"
-import { GalleryVerticalEnd, Minus, Plus } from "lucide-react"
-
+import * as React from "react";
+import { GalleryVerticalEnd, Minus, Plus } from "lucide-react";
+import { Link, useLocation } from "react-router-dom"; // ✅ 1. useLocation
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
@@ -20,88 +20,78 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
-       items: [
-        {
-          title: "Dashboard",
-          url: "#",
-        }
+      items: [
+        { title: "Dashboard", url: "/dashboard" },
       ],
     },
     {
-      title: "Suppiler",
-      url: "#",
+      title: "Supplier",
       items: [
-        {
-          title: "Add-Suppiler",
-          url: "#",
-        },
-        {
-          title: "Details-Suppiler",
-          url: "#",
-        },
+        { title: "Add Supplier", url: "/supplier" },
       ],
     },
     {
       title: "Category",
-      url: "#",
       items: [
-        {
-          title: "Add-Category",
-          url: "#",
-        }
+        { title: "Add Category", url: "/category" },
+      ],
+    },
+    {
+      title: "Brands",
+      items: [
+        { title: "Add Brands", url: "/brands" },
       ],
     },
     {
       title: "Products",
-      url: "#",
       items: [
-        {
-          title: "Add-Products",
-          url: "#",
-        }
+        { title: "Add Product", url: "/products" },
       ],
     },
     {
       title: "Purchase",
-      url: "#",
       items: [
-        {
-          title: "Add-Purchase",
-          url: "#",
-        }
+        { title: "Add Purchase", url: "/purchase" },
       ],
-    }
+    },
+    {
+      title: "Sales",
+      items: [
+        { title: "Add Sale", url: "/sales" },
+      ],
+    },
   ],
-}
-
+};
 
 export default function SidebarLayout(props) {
+  const location = useLocation(); // ✅ 2. get current path
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
+              <Link to="#">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
                   <GalleryVerticalEnd className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-medium">Documentation</span>
-                  <span className="">v1.0.0</span>
+                  <span>v1.0.0</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarMenu>
@@ -115,6 +105,7 @@ export default function SidebarLayout(props) {
                       <Minus className="ml-auto group-data-[state=closed]/collapsible:hidden" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
+
                   {item.items?.length > 0 && (
                     <CollapsibleContent>
                       <SidebarMenuSub>
@@ -122,9 +113,9 @@ export default function SidebarLayout(props) {
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton
                               asChild
-                              isActive={subItem.isActive}
+                              isActive={location.pathname === subItem.url} // ✅ 3. highlight active
                             >
-                              <a href={subItem.url}>{subItem.title}</a>
+                              <Link to={subItem.url}>{subItem.title}</Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
@@ -137,7 +128,8 @@ export default function SidebarLayout(props) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
