@@ -5,14 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import ConfirmDialog from "@/dialog/ConfirmDialog";
+import SupplierFormDialog from "./SupplierFormDialog";
 export default function SupplierTable() {
   const { suppliers, removeSupplier, loading } = useSuppliers();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const perPage = 5;
 
-  // ✅ Skeleton while loading
+  // Skeleton while loading
   if (loading) {
     return (
       <Card className="p-6 shadow-lg bg-white dark:bg-gray-900">
@@ -32,7 +33,7 @@ export default function SupplierTable() {
               </tr>
             </thead>
             <tbody>
-              {[...Array(5)].map((_, i) => (
+              {[...Array(3)].map((_, i) => (
                 <tr key={i}>
                   <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
                     <Skeleton className="h-5 w-32" />
@@ -129,13 +130,19 @@ export default function SupplierTable() {
                     {s.address}
                   </td>
                   <td className="px-4 py-3 border border-gray-200 dark:border-gray-700 text-center">
-                    <Button
-                      size="sm"
+                    <SupplierFormDialog
+                      mode="edit"
+                      supplier={s}
+                      onSubmit={(values) => updateSupplier(s.id, values)}
+                    />
+                    <ConfirmDialog
+                      triggerLabel="Delete"
+                      title="Delete Supplier?"
+                      description={`Are you sure you want to delete ${s.name}? This action cannot be undone.`}
+                      confirmLabel="Yes, Delete"
+                      onConfirm={() => removeSupplier(s.id)}
                       variant="destructive"
-                      onClick={() => removeSupplier(s.id)}
-                    >
-                      Delete
-                    </Button>
+                    />
                   </td>
                 </tr>
               ))

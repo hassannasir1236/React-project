@@ -1,6 +1,11 @@
 // src/context/SupplierContext.jsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { getAllSuppliers, deleteSupplier } from "@/Services/suppiler";
+import {
+  getAllSuppliers,
+  addSupplier,
+  updateSupplier,
+  deleteSupplier,
+} from "@/Services/suppiler";
 import { toast } from "sonner";
 
 const SupplierContext = createContext();
@@ -9,7 +14,7 @@ export const SupplierProvider = ({ children }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch all suppliers
+  // ✅ Fetch all suppliers
   const fetchSuppliers = async () => {
     setLoading(true);
     try {
@@ -17,25 +22,75 @@ export const SupplierProvider = ({ children }) => {
       setSuppliers(data);
     } catch (err) {
       console.error("Error fetching suppliers:", err);
+        toast.error("Failed to fetch suppliers", {
+          position: "top-right",
+        });
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete supplier
-  const removeSupplier = async (id) => {
-    if (!confirm("Are you sure you want to delete this supplier?")) return;
-
+  // ✅ Add a supplier
+  const createSupplier = async (supplierData) => {
+    setLoading(true);
     try {
-      await deleteSupplier(id);
-      setSuppliers((prev) => prev.filter((s) => s.id !== id));
-      toast.success("Supplier deleted successfully!");
+      const newId = await addSupplier(supplierData);
+      const newSupplier = { id: newId, ...supplierData };
+      setSuppliers((prev) => [...prev, newSupplier]);
+      toast.success("Supplier added successfully!", {
+          position: "top-right",
+        });
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to delete supplier");
+      console.error("Error adding supplier:", err);
+      toast.error("Failed to add supplier", {
+          position: "top-right",
+        });
+    } finally {
+      setLoading(false);
     }
   };
 
+  // ✅ Update a supplier
+  const editSupplier = async (id, updatedData) => {
+    setLoading(true);
+    try {
+      await updateSupplier(id, updatedData);
+      setSuppliers((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, ...updatedData } : s))
+      );
+      toast.success("Supplier updated successfully!", {
+          position: "top-right",
+        });
+    } catch (err) {
+      console.error("Error updating supplier:", err);
+      toast.error("Failed to update supplier", {
+          position: "top-right",
+        });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Delete a supplier
+  const removeSupplier = async (id) => {
+    setLoading(true);
+    try {
+      await deleteSupplier(id);
+      setSuppliers((prev) => prev.filter((s) => s.id !== id));
+      toast.success("Supplier deleted successfully!", {
+          position: "top-right",
+        });
+    } catch (err) {
+      console.error("Error deleting supplier:", err);
+      toast.error("Failed to delete supplier", {
+          position: "top-right",
+        });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Fetch data on mount
   useEffect(() => {
     fetchSuppliers();
   }, []);
@@ -44,9 +99,10 @@ export const SupplierProvider = ({ children }) => {
     <SupplierContext.Provider
       value={{
         suppliers,
-        setSuppliers,
-        removeSupplier,
         loading,
+        createSupplier,
+        editSupplier,
+        removeSupplier,
         refreshSuppliers: fetchSuppliers,
       }}
     >
