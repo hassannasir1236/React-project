@@ -81,7 +81,7 @@ export default function LoginForm({ className, ...props }) {
                       />
                     </div>
 
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full btn-danger">
                       Login
                     </Button>
                   </div>

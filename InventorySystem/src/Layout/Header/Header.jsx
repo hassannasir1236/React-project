@@ -1,5 +1,6 @@
 // src/Layout/Header/Header.jsx
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import Logout from "@/Pages/Auth/Logout";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,6 +17,7 @@ export default function HeaderLayout() {
        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
           <ThemeToggle />
+          <Logout />
           <Separator
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"

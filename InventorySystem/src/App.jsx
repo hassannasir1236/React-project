@@ -11,24 +11,14 @@ import ProductIndex from "./Pages/Products/Index";
 import BrandsIndex from "./Pages/Brands/BrandsIndex";
 import SalesIndex from "./Pages/Sales/SalesIndex";
 import PurchaseIndex from "./Pages/Purchase/PurchaseIndex";
-
+import CustomRoutes from './routes/CustomRoutes';
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
     <>
-          <Routes>
-            <Route path="/" element={<LoginForm />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/supplier" element={<SupplierIndex />} />
-            <Route path="/category" element={<CategoryIndex />} />
-            <Route path="/products" element={<ProductIndex />} />
-            <Route path="/brands" element={<BrandsIndex />} />
-            <Route path="/sales" element={<SalesIndex />} />
-            <Route path="/purchase" element={<PurchaseIndex />} />
-
-          </Routes>
+      <CustomRoutes />
     </>
   )
 }

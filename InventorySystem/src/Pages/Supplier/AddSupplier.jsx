@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-
+import { addSupplier } from "@/Services/suppiler"; 
+import { Timestamp } from "firebase/firestore";
 // Replace with your ShadCN components or fallback to HTML if needed
 import { Button } from "../../components/ui/button";
 import {
@@ -44,15 +45,23 @@ export default function SupplierForm() {
     },
   });
 
-  const onSubmit = (values) => {
-    toast("Supplier Submitted", {
-      description: (
-        <pre className="mt-2 w-[320px] rounded-md bg-black p-4 text-white">
-          {JSON.stringify(values, null, 2)}
-        </pre>
-      ),
-    });
+  const onSubmit = async (values) => {
+    try {
+      values.createdAt = Timestamp.fromDate(new Date(values.createdAt)); // Convert to Firestore Timestamp
+      await addSupplier(values);
+
+      toast.success("Supplier added successfully!",{
+        position: "top-right",
+      });
+      form.reset();
+    } catch (error) {
+      toast.error("Failed to add supplier", {
+        position: "top-right",
+      });
+      console.error(error);
+    }
   };
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-grey-100 ">
