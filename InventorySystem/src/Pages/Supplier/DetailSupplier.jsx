@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmDialog from "@/dialog/ConfirmDialog";
 import SupplierFormDialog from "./SupplierFormDialog";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 export default function SupplierTable() {
   const { suppliers, removeSupplier, loading } = useSuppliers();
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,48 +16,49 @@ export default function SupplierTable() {
 
   // Skeleton while loading
   if (loading) {
-    return (
-      <Card className="p-6 shadow-lg bg-white dark:bg-gray-900">
-        <div className="mb-4">
-          <Skeleton className="h-10 w-1/3" />
-        </div>
+    return <FullPageLoader message="Loading Category..." />;
+    // return (
+    //   <Card className="p-6 shadow-lg bg-white dark:bg-gray-900">
+    //     <div className="mb-4">
+    //       <Skeleton className="h-10 w-1/3" />
+    //     </div>
 
-        <div className="overflow-auto rounded-md border border-gray-200 dark:border-gray-700">
-          <table className="min-w-full text-sm border-collapse">
-            <thead className="bg-gray-100 dark:bg-gray-800 text-xs uppercase">
-              <tr>
-                {["Name", "Email", "Phone", "Address", "Actions"].map((h) => (
-                  <th key={h} className="px-4 py-3 border border-gray-200 dark:border-gray-700">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[...Array(3)].map((_, i) => (
-                <tr key={i}>
-                  <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
-                    <Skeleton className="h-5 w-32" />
-                  </td>
-                  <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
-                    <Skeleton className="h-5 w-40" />
-                  </td>
-                  <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
-                    <Skeleton className="h-5 w-24" />
-                  </td>
-                  <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
-                    <Skeleton className="h-5 w-48" />
-                  </td>
-                  <td className="px-4 py-3 border border-gray-200 dark:border-gray-700 text-center">
-                    <Skeleton className="h-8 w-16 mx-auto" />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    );
+    //     <div className="overflow-auto rounded-md border border-gray-200 dark:border-gray-700">
+    //       <table className="min-w-full text-sm border-collapse">
+    //         <thead className="bg-gray-100 dark:bg-gray-800 text-xs uppercase">
+    //           <tr>
+    //             {["Name", "Email", "Phone", "Address", "Actions"].map((h) => (
+    //               <th key={h} className="px-4 py-3 border border-gray-200 dark:border-gray-700">
+    //                 {h}
+    //               </th>
+    //             ))}
+    //           </tr>
+    //         </thead>
+    //         <tbody>
+    //           {[...Array(3)].map((_, i) => (
+    //             <tr key={i}>
+    //               <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
+    //                 <Skeleton className="h-5 w-32" />
+    //               </td>
+    //               <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
+    //                 <Skeleton className="h-5 w-40" />
+    //               </td>
+    //               <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
+    //                 <Skeleton className="h-5 w-24" />
+    //               </td>
+    //               <td className="px-4 py-3 border border-gray-200 dark:border-gray-700">
+    //                 <Skeleton className="h-5 w-48" />
+    //               </td>
+    //               <td className="px-4 py-3 border border-gray-200 dark:border-gray-700 text-center">
+    //                 <Skeleton className="h-8 w-16 mx-auto" />
+    //               </td>
+    //             </tr>
+    //           ))}
+    //         </tbody>
+    //       </table>
+    //     </div>
+    //   </Card>
+    // );
   }
 
   // 🔍 Searching

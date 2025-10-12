@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
-
-import { Button } from "../../components/ui/button";
+import { useBrands } from "@/context/BrandContext";
+import { Button } from "@/components/ui/button";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 import {
   Form,
   FormControl,
@@ -12,65 +12,90 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../../components/ui/form";
-import { Input } from "../../components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../components/ui/card";
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 
-// Schema
+// ✅ Validation schema
 const BrandSchema = z.object({
-  name: z.string().min(2, { message: "Brand name must be at least 2 characters." }),
+  name: z
+    .string()
+    .min(2, { message: "Brand name must be at least 2 characters." }),
 });
 
-export default function AddBrand() {
+export default function AddBrand({ onClose }) {
+  const {
+    loading,
+    createBrand,
+    editBrand,
+    editingBrand,
+    setEditingBrand,
+  } = useBrands();
+
+    if (loading) {
+      return <FullPageLoader message="Loading Brands..." />;
+    }
+
   const form = useForm({
     resolver: zodResolver(BrandSchema),
     defaultValues: { name: "" },
   });
 
-  const onSubmit = (values) => {
-    toast("Brand added!", {
-      description: (
-        <pre className="mt-2 w-[320px] rounded-md bg-black p-4 text-white">
-          {JSON.stringify(values, null, 2)}
-        </pre>
-      ),
-    });
+  // ✅ Fill form when editing
+  useEffect(() => {
+    if (editingBrand) {
+      form.setValue("name", editingBrand.name);
+    }
+  }, [editingBrand, form]);
+
+  // ✅ Submit handler
+  const onSubmit = async (values) => {
+    if (editingBrand) {
+      await editBrand(editingBrand.id, values);
+      setEditingBrand(null);
+    } else {
+      await createBrand(values);
+    }
     form.reset();
+    if (onClose) onClose();
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Card className="w-full max-w-md shadow-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-xl">Add Brand</CardTitle>
-        </CardHeader>
+    <Card className="w-full max-w-md shadow-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700">
+      <CardHeader>
+        <CardTitle>{editingBrand ? "Edit Brand" : "Add Brand"}</CardTitle>
+      </CardHeader>
 
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Brand Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter brand name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </form>
-          </Form>
-        </CardContent>
-
-        <CardFooter className="justify-end">
-          <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
-            Submit
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Brand Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter brand name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <CardFooter className="justify-end">
+              <Button type="submit">
+                {editingBrand ? "Update" : "Submit"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }

@@ -7,6 +7,7 @@ import {
   deleteSupplier,
 } from "@/Services/suppiler";
 import { toast } from "sonner";
+import { Timestamp } from "firebase/firestore";
 
 const SupplierContext = createContext();
 
@@ -30,46 +31,57 @@ export const SupplierProvider = ({ children }) => {
     }
   };
 
-  // ✅ Add a supplier
-  const createSupplier = async (supplierData) => {
+    // ✅ Add a supplier
+    const createSupplier = async (supplierData) => {
     setLoading(true);
     try {
-      const newId = await addSupplier(supplierData);
-      const newSupplier = { id: newId, ...supplierData };
-      setSuppliers((prev) => [...prev, newSupplier]);
-      toast.success("Supplier added successfully!", {
-          position: "top-right",
-        });
-    } catch (err) {
-      console.error("Error adding supplier:", err);
-      toast.error("Failed to add supplier", {
-          position: "top-right",
-        });
-    } finally {
-      setLoading(false);
-    }
-  };
+        const newSupplierData = {
+        ...supplierData,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+        };
 
-  // ✅ Update a supplier
-  const editSupplier = async (id, updatedData) => {
+        const newId = await addSupplier(newSupplierData);
+
+        // ✅ Add to local state (with Firestore timestamps included)
+        const newSupplier = { id: newId, ...newSupplierData };
+        setSuppliers((prev) => [...prev, newSupplier]);
+
+        toast.success("Supplier added successfully!", { position: "top-right" });
+    } catch (err) {
+        console.error("Error adding supplier:", err);
+        toast.error("Failed to add supplier", { position: "top-right" });
+    } finally {
+        setLoading(false);
+    }
+    };
+
+    // ✅ Update an existing supplier
+    const editSupplier = async (id, updatedData) => {
     setLoading(true);
     try {
-      await updateSupplier(id, updatedData);
-      setSuppliers((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, ...updatedData } : s))
-      );
-      toast.success("Supplier updated successfully!", {
-          position: "top-right",
-        });
+        const updatedSupplierData = {
+        ...updatedData,
+        updatedAt: Timestamp.now(), // update only this timestamp
+        };
+
+        await updateSupplier(id, updatedSupplierData);
+
+        // ✅ Update state immediately
+        setSuppliers((prev) =>
+        prev.map((s) =>
+            s.id === id ? { ...s, ...updatedSupplierData } : s
+        )
+        );
+
+        toast.success("Supplier updated successfully!", { position: "top-right" });
     } catch (err) {
-      console.error("Error updating supplier:", err);
-      toast.error("Failed to update supplier", {
-          position: "top-right",
-        });
+        console.error("Error updating supplier:", err);
+        toast.error("Failed to update supplier", { position: "top-right" });
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+    };
 
   // ✅ Delete a supplier
   const removeSupplier = async (id) => {
