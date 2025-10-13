@@ -32,11 +32,16 @@ const ProductSchema = z.object({
   giftMinQty: z.number().optional(),
   giftQty: z.number().optional(),
   reorderLevel: z.number(),
+  unit: z.string().min(1),
   expiryDate: z.string().optional(),
   stock: z.number(),
   imageUrl: z.string().optional(),
+  status: z.enum(["active", "inactive"]),
+  description: z.string().optional(),
   createdAt: z.string(),
+  updatedAt: z.string(),
 });
+
 
 export default function AddProduct() {
   const form = useForm({
@@ -45,9 +50,9 @@ export default function AddProduct() {
       name: "",
       sku: "",
       barcode: "",
-      categoryId: "",
-      brandId: "",
       supplierId: "",
+      brandId: "",
+      categoryId: "",
       costPrice: 0,
       sellingPrice: 0,
       discountType: "none",
@@ -55,10 +60,14 @@ export default function AddProduct() {
       giftMinQty: 0,
       giftQty: 0,
       reorderLevel: 0,
+      unit: "pcs",
       expiryDate: "",
       stock: 0,
       imageUrl: "",
+      status: "active",
+      description: "",
       createdAt: new Date().toISOString().split("T")[0],
+      updatedAt: new Date().toISOString().split("T")[0],
     },
   });
 
@@ -72,31 +81,53 @@ export default function AddProduct() {
     });
   };
 
+  
   return (
     <div className="flex justify-center mt-6 p-4">
       <Card className="w-full max-w-5xl shadow-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700">
         <CardHeader>
-          <CardTitle className="text-2xl text-gray-900 dark:text-gray-100">Add New Product</CardTitle>
+          <CardTitle className="text-2xl text-gray-900 dark:text-gray-100">
+            Add New Product
+          </CardTitle>
         </CardHeader>
+
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Left Column */}
-              <div className="space-y-4">
-                {["name","sku","barcode","categoryId","brandId","supplierId","costPrice","sellingPrice"].map((field) => (
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            >
+              {/* LEFT COLUMN */}
+              <div className="space-y-5">
+                {[
+                  "name",
+                  "sku",
+                  "barcode",
+                  "supplierId",
+                  "brandId",
+                  "categoryId",
+                  "costPrice",
+                  "sellingPrice",
+                ].map((field) => (
                   <FormField
                     key={field}
                     control={form.control}
                     name={field}
                     render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-800 dark:text-gray-200">{field.charAt(0).toUpperCase() + field.slice(1)}</FormLabel>
+                        <FormLabel className="text-gray-800 dark:text-gray-200">
+                          {field.charAt(0).toUpperCase() + field.slice(1)}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...f}
-                            type={["costPrice","sellingPrice"].includes(field) ? "number" : "text"}
-                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
+                            type={
+                              ["costPrice", "sellingPrice"].includes(field)
+                                ? "number"
+                                : "text"
+                            }
+                            placeholder={`Enter ${field.replace(/([A-Z])/g, " $1")}`}
+                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                           />
                         </FormControl>
                         <FormMessage />
@@ -104,20 +135,97 @@ export default function AddProduct() {
                     )}
                   />
                 ))}
+                   {/* Unit Dropdown */}
+                <FormField
+                  control={form.control}
+                  name="unit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-800 dark:text-gray-200">
+                        Unit
+                      </FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded"
+                        >
+                          {["pcs", "kg", "g", "liter", "ml", "box", "pack", "dozen"].map(
+                            (opt) => (
+                              <option key={opt} value={opt}>
+                                {opt.toUpperCase()}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Status Dropdown */}
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-800 dark:text-gray-200">
+                        Status
+                      </FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded"
+                        >
+                          {["active", "inactive"].map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt.toUpperCase()}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
-              {/* Right Column */}
-              <div className="space-y-4">
+              {/* RIGHT COLUMN */}
+              <div className="space-y-5">
+                {/* Discount Type */}
+                <FormField
+                  control={form.control}
+                  name="discountType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-800 dark:text-gray-200">
+                        Discount Type
+                      </FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded"
+                        >
+                          {["none", "percentage", "fixed"].map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt.toUpperCase()}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Right Side Inputs */}
                 {[
-                  {name: "discountType", type:"select", options:["none","percentage","fixed"]},
-                  {name: "discountValue", type:"number"},
-                  {name: "giftMinQty", type:"number"},
-                  {name: "giftQty", type:"number"},
-                  {name: "reorderLevel", type:"number"},
-                  {name: "expiryDate", type:"date"},
-                  {name: "stock", type:"number"},
-                  {name: "imageUrl", type:"text"},
-                  {name: "createdAt", type:"date"}
+                  { name: "discountValue", type: "number" },
+                  { name: "giftMinQty", type: "number" },
+                  { name: "giftQty", type: "number" },
+                  { name: "reorderLevel", type: "number" },
+                  { name: "expiryDate", type: "date" },
+                  { name: "stock", type: "number" },
                 ].map((field) => (
                   <FormField
                     key={field.name}
@@ -125,38 +233,105 @@ export default function AddProduct() {
                     name={field.name}
                     render={({ field: f }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-800 dark:text-gray-200">{field.name.charAt(0).toUpperCase() + field.name.slice(1)}</FormLabel>
+                        <FormLabel className="text-gray-800 dark:text-gray-200">
+                          {field.name
+                            .replace(/([A-Z])/g, " $1")
+                            .replace(/^./, (s) => s.toUpperCase())}
+                        </FormLabel>
                         <FormControl>
-                          {field.type === "select" ? (
-                            <select
-                              {...f}
-                              className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded"
-                            >
-                              {field.options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                          ) : (
-                            <Input
-                              {...f}
-                              type={field.type}
-                              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
-                            />
-                          )}
+                          <Input
+                            {...f}
+                            type={field.type}
+                            placeholder={`Enter ${field.name.replace(/([A-Z])/g, " $1")}`}
+                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 ))}
+
+
+                {/* Description */}
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-800 dark:text-gray-200">
+                        Description
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          rows={3}
+                          placeholder="Enter product description"
+                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Image URL */}
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-800 dark:text-gray-200">
+                        Image URL
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="text"
+                          placeholder="https://..."
+                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Created At (Read-only) */}
+                <FormField
+                  control={form.control}
+                  name="createdAt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-800 dark:text-gray-200">
+                        Created At
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="date"
+                          readOnly
+                          className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
 
-              {/* Submit Button */}
-              <div className="md:col-span-2 flex justify-end">
-                <Button type="submit" className="bg-black dark:bg-white text-white dark:text-black">
+              {/* ✅ Submit Button */}
+              <div className="md:col-span-2 flex justify-end mt-4">
+                <Button
+                  type="submit"
+                  className="bg-black dark:bg-white text-white dark:text-black px-6 py-2"
+                >
                   Add Product
                 </Button>
               </div>
             </form>
           </Form>
+
         </CardContent>
       </Card>
     </div>
