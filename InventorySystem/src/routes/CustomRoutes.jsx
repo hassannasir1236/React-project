@@ -14,7 +14,7 @@ import { SupplierProvider } from "@/context/SupplierContext";
 import { BrandProvider } from "@/context/BrandContext";
 import { CategoryProvider } from "@/context/CategoryContext";
 import { ProductProvider } from "@/context/ProductContext";
-
+import { PurchaseProvider } from "@/context/PurchaseContext";
 
 export default function CustomRoutes() {
   return (
@@ -22,68 +22,70 @@ export default function CustomRoutes() {
         <BrandProvider>
           <CategoryProvider>
             <ProductProvider>
-              <Routes>
-                {/* Public Route */}
-                <Route path="/" element={<LoginForm />} />
+              <PurchaseProvider>
+                <Routes>
+                  {/* Public Route */}
+                  <Route path="/" element={<LoginForm />} />
 
-                {/* Protected Routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <PrivateRoute>
-                      <DashboardPage />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/supplier"
-                  element={
-                    <PrivateRoute>
-                      <SupplierIndex />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/category"
-                  element={
-                    <PrivateRoute>
-                      <CategoryIndex />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/products"
-                  element={
-                    <PrivateRoute>
-                      <ProductIndex />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/brands"
-                  element={
-                    <PrivateRoute>
-                      <BrandsIndex />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/sales"
-                  element={
-                    <PrivateRoute>
-                      <SalesIndex />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/purchase"
-                  element={
-                    <PrivateRoute>
-                      <PurchaseIndex />
-                    </PrivateRoute>
-                  }
-                />
-              </Routes>
+                  {/* Protected Routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <DashboardPage />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/supplier"
+                    element={
+                      <PrivateRoute>
+                        <SupplierIndex />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/category"
+                    element={
+                      <PrivateRoute>
+                        <CategoryIndex />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/products"
+                    element={
+                      <PrivateRoute>
+                        <ProductIndex />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/brands"
+                    element={
+                      <PrivateRoute>
+                        <BrandsIndex />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/sales"
+                    element={
+                      <PrivateRoute>
+                        <SalesIndex />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/purchase"
+                    element={
+                      <PrivateRoute>
+                        <PurchaseIndex />
+                      </PrivateRoute>
+                    }
+                  />
+                </Routes>
+              </PurchaseProvider>
             </ProductProvider>
           </CategoryProvider>
         </BrandProvider>

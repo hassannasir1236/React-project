@@ -3,7 +3,9 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-
+import { useSuppliers } from "@/context/SupplierContext";
+import { useProducts } from "@/context/ProductContext";
+import { usePurchases } from "@/context/PurchaseContext";
 import {
   Card,
   CardContent,
@@ -33,6 +35,7 @@ const ItemSchema = z.object({
   productId: z.string().min(1, "Product ID is required"),
   quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
   costPrice: z.coerce.number().min(0, "Cost price required"),
+  sellingPrice: z.coerce.number().min(0, "Selling price required"),
   giftQty: z.coerce.number().min(0, "Gift quantity required"),
 });
 
@@ -44,13 +47,32 @@ const PurchaseSchema = z.object({
 });
 
 export default function AddPurchase() {
+  const { suppliers } = useSuppliers();
+  const { products } = useProducts();
+  const { createPurchase } = usePurchases();
+
+  const normalizedSuppliers = suppliers?.map((s) => ({
+    id: s.id,
+    value: s.id,
+    label: s.name,
+  })) || [];
+
+  const normalizedProducts = products?.map((p) => ({
+    id: p.id,
+    value: p.id,
+    label: p.name,
+    sellingPrice: p.sellingPrice || 0, // Optional default
+  })) || [];
+
   const form = useForm({
     resolver: zodResolver(PurchaseSchema),
     defaultValues: {
       supplierId: "",
-      purchaseDate: "",
+      purchaseDate: new Date().toISOString().split("T")[0],
       totalAmount: 0,
-      items: [{ productId: "", quantity: 1, costPrice: 0, giftQty: 0 }],
+      items: [
+        { productId: "", quantity: 1, costPrice: 0, sellingPrice: 0, giftQty: 0 },
+      ],
     },
   });
 
@@ -59,9 +81,21 @@ export default function AddPurchase() {
     name: "items",
   });
 
+  // Submit purchase
   const onSubmit = (values) => {
-    console.log("Purchase Submitted", values);
-    toast.success("Purchase recorded!");
+    const totalAmount = values.items.reduce(
+      (sum, item) => sum + item.quantity * item.costPrice,
+      0
+    );
+    createPurchase({ ...values, totalAmount });
+    form.reset({
+      supplierId: "",
+      purchaseDate: new Date().toISOString().split("T")[0],
+      totalAmount: 0,
+      items: [
+        { productId: "", quantity: 1, costPrice: 0, sellingPrice: 0, giftQty: 0 },
+      ],
+    });
   };
 
   return (
@@ -75,27 +109,27 @@ export default function AddPurchase() {
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            {/* Supplier ID */}
+            {/* Supplier */}
             <FormField
               control={form.control}
               name="supplierId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Supplier</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select supplier" />
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="w-full md:w-60">
+                        <SelectValue placeholder="Select Supplier" />
                       </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="sup1">Supplier 1</SelectItem>
-                      <SelectItem value="sup2">Supplier 2</SelectItem>
-                    </SelectContent>
-                  </Select>
+                      <SelectContent>
+                        {normalizedSuppliers.map((supplier) => (
+                          <SelectItem key={supplier.id} value={supplier.value}>
+                            {supplier.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -137,66 +171,115 @@ export default function AddPurchase() {
               {fields.map((item, index) => (
                 <div
                   key={item.id}
-                  className="grid md:grid-cols-5 gap-4 items-end"
+                  className="grid grid-cols-6 gap-4 items-end"
                 >
-                  {/* Product ID */}
+                  {/* Product */}
                   <FormField
                     control={form.control}
                     name={`items.${index}.productId`}
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="col-span-2">
                         <FormLabel>Product</FormLabel>
                         <FormControl>
-                          <Input placeholder="Product ID" {...field} />
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select Product" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {normalizedProducts.map((product) => (
+                                <SelectItem key={product.id} value={product.value}>
+                                  {product.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   {/* Quantity */}
                   <FormField
                     control={form.control}
                     name={`items.${index}.quantity`}
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="col-span-1">
                         <FormLabel>Qty</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   {/* Cost Price */}
                   <FormField
                     control={form.control}
                     name={`items.${index}.costPrice`}
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="col-span-1">
                         <FormLabel>Cost</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Selling Price */}
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.sellingPrice`}
+                    render={({ field }) => (
+                      <FormItem className="col-span-1">
+                        <FormLabel>Selling</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {/* Gift Qty */}
                   <FormField
                     control={form.control}
                     name={`items.${index}.giftQty`}
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="col-span-1">
                         <FormLabel>Gift</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  {/* Remove */}
-                  <div>
+
+                  {/* Remove Button */}
+                  <div className="col-span-1 flex items-end">
                     <Button
                       type="button"
                       variant="destructive"
@@ -207,10 +290,17 @@ export default function AddPurchase() {
                   </div>
                 </div>
               ))}
+
               <Button
                 type="button"
                 onClick={() =>
-                  append({ productId: "", quantity: 1, costPrice: 0, giftQty: 0 })
+                  append({
+                    productId: "",
+                    quantity: 1,
+                    costPrice: 0,
+                    sellingPrice: 0,
+                    giftQty: 0,
+                  })
                 }
               >
                 + Add Item
@@ -219,9 +309,7 @@ export default function AddPurchase() {
 
             {/* Submit */}
             <div className="pt-6">
-              <Button type="submit" className="w-fit">
-                Submit Purchase
-              </Button>
+              <Button type="submit">Submit Purchase</Button>
             </div>
           </form>
         </Form>
@@ -229,5 +317,6 @@ export default function AddPurchase() {
 
       <CardFooter />
     </Card>
+
   );
 }
