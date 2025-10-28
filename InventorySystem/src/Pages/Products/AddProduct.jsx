@@ -1,13 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useSuppliers } from "@/context/SupplierContext";
+import { useBrands } from "@/context/BrandContext";
+import { useCategories } from "@/context/CategoryContext";
+import { useProducts } from "@/context/ProductContext"; // ✅ Correct hook
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "../../components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
 import {
   Form,
   FormField,
@@ -15,26 +25,52 @@ import {
   FormLabel,
   FormControl,
   FormMessage,
-} from "../../components/ui/form";
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
-// Zod schema for validation
+// ✅ Schema
 const ProductSchema = z.object({
-  name: z.string().min(2),
-  sku: z.string().min(1),
+  name: z.string().min(2, "Product name is required"),
+  sku: z.string().min(1, "SKU is required"),
   barcode: z.string().optional(),
-  categoryId: z.string().min(1),
-  brandId: z.string().min(1),
-  supplierId: z.string().min(1),
-  costPrice: z.number(),
-  sellingPrice: z.number(),
+
+  categoryId: z
+    .string()
+    .min(1, "Please select a category")
+    .refine((val) => val !== "select" && val !== "", {
+      message: "Please select a category",
+    }),
+
+  brandId: z
+    .string()
+    .min(1, "Please select a brand")
+    .refine((val) => val !== "select" && val !== "", {
+      message: "Please select a brand",
+    }),
+
+  supplierId: z
+    .string()
+    .min(1, "Please select a supplier")
+    .refine((val) => val !== "select" && val !== "", {
+      message: "Please select a supplier",
+    }),
+
+  costPrice: z.coerce.number({ invalid_type_error: "Cost price must be a number" }),
+  sellingPrice: z.coerce.number({ invalid_type_error: "Selling price must be a number" }),
   discountType: z.enum(["percentage", "fixed", "none"]),
-  discountValue: z.number().optional(),
-  giftMinQty: z.number().optional(),
-  giftQty: z.number().optional(),
-  reorderLevel: z.number(),
-  unit: z.string().min(1),
+  discountValue: z.coerce.number().optional(),
+  giftMinQty: z.coerce.number().optional(),
+  giftQty: z.coerce.number().optional(),
+  reorderLevel: z.coerce.number({ invalid_type_error: "Reorder level must be a number" }),
+  unit: z.string().min(1, "Unit is required"),
   expiryDate: z.string().optional(),
-  stock: z.number(),
+  stock: z.coerce.number({ invalid_type_error: "Stock must be a number" }),
   imageUrl: z.string().optional(),
   status: z.enum(["active", "inactive"]),
   description: z.string().optional(),
@@ -42,13 +78,49 @@ const ProductSchema = z.object({
   updatedAt: z.string(),
 });
 
+// ✅ SKU Generator
+const generateSKU = () => {
+  const date = new Date().toISOString().split("T")[0].replace(/-/g, "");
+  const random = Math.floor(10000 + Math.random() * 90000);
+  return `SKU-${date}-${random}`;
+};
 
 export default function AddProduct() {
+  const {
+    loading,
+    createProduct,
+    editProduct,
+    editingProduct,
+    setEditingProduct,
+  } = useProducts(); // ✅ Correct hook usage
+
+  const { suppliers } = useSuppliers();
+  const { brands } = useBrands();
+  const { categories } = useCategories();
+
+  const normalizedSuppliers = suppliers?.map((s) => ({
+    id: s.id,
+    value: s.id,
+    label: s.name,
+  })) || [];
+
+  const normalizedBrands = brands?.map((b) => ({
+    id: b.id,
+    value: b.id,
+    label: b.name,
+  })) || [];
+
+  const normalizedCategories = categories?.map((c) => ({
+    id: c.id,
+    value: c.id,
+    label: c.name,
+  })) || [];
+
   const form = useForm({
     resolver: zodResolver(ProductSchema),
     defaultValues: {
       name: "",
-      sku: "",
+      sku: generateSKU(),
       barcode: "",
       supplierId: "",
       brandId: "",
@@ -71,23 +143,47 @@ export default function AddProduct() {
     },
   });
 
-  const onSubmit = (values) => {
-    toast.success("Product Added!", {
-      description: (
-        <pre className="mt-2 p-4 bg-gray-900 text-white dark:bg-gray-100 dark:text-black rounded">
-          {JSON.stringify(values, null, 2)}
-        </pre>
-      ),
-    });
+  // ✅ Prefill form if editing
+  useEffect(() => {
+    if (editingProduct) {
+      form.reset({
+        ...editingProduct,
+        createdAt: editingProduct.createdAt
+          ? new Date(editingProduct.createdAt.seconds * 1000).toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0],
+        updatedAt: new Date().toISOString().split("T")[0],
+      });
+    }
+  }, [editingProduct, form]);
+
+  // ✅ Submit handler
+  const onSubmit = async (values) => {
+    try {
+      if (editingProduct) {
+        await editProduct(editingProduct.id, values);
+        setEditingProduct(null);
+      } else {
+        await createProduct(values);
+      }
+
+      form.reset({
+        ...form.defaultValues,
+        sku: generateSKU(),
+      });
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast.error("Something went wrong!");
+    }
   };
 
-  
+  if (loading) return <FullPageLoader />;
+
   return (
     <div className="flex justify-center mt-6 p-4">
       <Card className="w-full max-w-5xl shadow-lg bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700">
         <CardHeader>
           <CardTitle className="text-2xl text-gray-900 dark:text-gray-100">
-            Add New Product
+            {editingProduct ? "Edit Product" : "Add New Product"}
           </CardTitle>
         </CardHeader>
 
@@ -99,92 +195,162 @@ export default function AddProduct() {
             >
               {/* LEFT COLUMN */}
               <div className="space-y-5">
-                {[
-                  "name",
-                  "sku",
-                  "barcode",
-                  "supplierId",
-                  "brandId",
-                  "categoryId",
-                  "costPrice",
-                  "sellingPrice",
-                ].map((field) => (
-                  <FormField
-                    key={field}
-                    control={form.control}
-                    name={field}
-                    render={({ field: f }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-800 dark:text-gray-200">
-                          {field.charAt(0).toUpperCase() + field.slice(1)}
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            {...f}
-                            type={
-                              ["costPrice", "sellingPrice"].includes(field)
-                                ? "number"
-                                : "text"
-                            }
-                            placeholder={`Enter ${field.replace(/([A-Z])/g, " $1")}`}
-                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                ))}
-                   {/* Unit Dropdown */}
+                {/* Product Name */}
                 <FormField
                   control={form.control}
-                  name="unit"
+                  name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-800 dark:text-gray-200">
-                        Unit
-                      </FormLabel>
+                      <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <select
-                          {...field}
-                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded"
-                        >
-                          {["pcs", "kg", "g", "liter", "ml", "box", "pack", "dozen"].map(
-                            (opt) => (
-                              <option key={opt} value={opt}>
-                                {opt.toUpperCase()}
-                              </option>
-                            )
-                          )}
-                        </select>
+                        <Input {...field} placeholder="Product name" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Status Dropdown */}
+                {/* SKU */}
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="sku"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-800 dark:text-gray-200">
-                        Status
-                      </FormLabel>
+                      <FormLabel>SKU (Auto)</FormLabel>
                       <FormControl>
-                        <select
-                          {...field}
-                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded"
-                        >
-                          {["active", "inactive"].map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt.toUpperCase()}
-                            </option>
-                          ))}
-                        </select>
+                        <Input {...field} readOnly />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {/* Supplier */}
+                <FormField
+                  control={form.control}
+                  name="supplierId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Supplier</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Supplier" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {normalizedSuppliers.map((supplier) => (
+                              <SelectItem key={supplier.id} value={supplier.value}>
+                                {supplier.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Brand */}
+                <FormField
+                  control={form.control}
+                  name="brandId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Brand" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {normalizedBrands.map((brand) => (
+                              <SelectItem key={brand.id} value={brand.value}>
+                                {brand.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Category */}
+                <FormField
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {normalizedCategories.map((category) => (
+                              <SelectItem key={category.id} value={category.value}>
+                                {category.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Cost & Selling Price */}
+                {["costPrice", "sellingPrice"].map((f) => (
+                  <FormField
+                    key={f}
+                    control={form.control}
+                    name={f}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          {f === "costPrice" ? "Cost Price" : "Selling Price"}
+                        </FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                ))}
+
+                {/* Unit */}
+                <FormField
+                  control={form.control}
+                  name="unit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unit</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Unit" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              "pcs",
+                              "kg",
+                              "g",
+                              "liter",
+                              "ml",
+                              "box",
+                              "pack",
+                              "dozen",
+                            ].map((unit) => (
+                              <SelectItem key={unit} value={unit}>
+                                {unit.toUpperCase()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
                     </FormItem>
                   )}
                 />
@@ -198,60 +364,53 @@ export default function AddProduct() {
                   name="discountType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-800 dark:text-gray-200">
-                        Discount Type
-                      </FormLabel>
+                      <FormLabel>Discount Type</FormLabel>
                       <FormControl>
-                        <select
-                          {...field}
-                          className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 px-2 py-1 rounded"
-                        >
-                          {["none", "percentage", "fixed"].map((opt) => (
-                            <option key={opt} value={opt}>
-                              {opt.toUpperCase()}
-                            </option>
-                          ))}
-                        </select>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["none", "percentage", "fixed"].map((opt) => (
+                              <SelectItem key={opt} value={opt}>
+                                {opt.toUpperCase()}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Right Side Inputs */}
+                {/* Other number fields */}
                 {[
-                  { name: "discountValue", type: "number" },
-                  { name: "giftMinQty", type: "number" },
-                  { name: "giftQty", type: "number" },
-                  { name: "reorderLevel", type: "number" },
-                  { name: "expiryDate", type: "date" },
-                  { name: "stock", type: "number" },
-                ].map((field) => (
+                  "discountValue",
+                  "giftMinQty",
+                  "giftQty",
+                  "reorderLevel",
+                  "expiryDate",
+                  "stock",
+                ].map((f) => (
                   <FormField
-                    key={field.name}
+                    key={f}
                     control={form.control}
-                    name={field.name}
-                    render={({ field: f }) => (
+                    name={f}
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-800 dark:text-gray-200">
-                          {field.name
-                            .replace(/([A-Z])/g, " $1")
-                            .replace(/^./, (s) => s.toUpperCase())}
+                        <FormLabel>
+                          {f.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase())}
                         </FormLabel>
                         <FormControl>
                           <Input
-                            {...f}
-                            type={field.type}
-                            placeholder={`Enter ${field.name.replace(/([A-Z])/g, " $1")}`}
-                            className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
+                            type={f === "expiryDate" ? "date" : "number"}
+                            {...field}
                           />
                         </FormControl>
-                        <FormMessage />
                       </FormItem>
                     )}
                   />
                 ))}
-
 
                 {/* Description */}
                 <FormField
@@ -259,18 +418,10 @@ export default function AddProduct() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-800 dark:text-gray-200">
-                        Description
-                      </FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea
-                          {...field}
-                          rows={3}
-                          placeholder="Enter product description"
-                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
-                        />
+                        <Textarea {...field} rows={3} placeholder="Enter product description" />
                       </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -281,57 +432,23 @@ export default function AddProduct() {
                   name="imageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-800 dark:text-gray-200">
-                        Image URL
-                      </FormLabel>
+                      <FormLabel>Image URL</FormLabel>
                       <FormControl>
-                        <Input
-                          {...field}
-                          type="text"
-                          placeholder="https://..."
-                          className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
-                        />
+                        <Input {...field} placeholder="https://..." />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Created At (Read-only) */}
-                <FormField
-                  control={form.control}
-                  name="createdAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-gray-800 dark:text-gray-200">
-                        Created At
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="date"
-                          readOnly
-                          className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
-                        />
-                      </FormControl>
-                      <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
 
-              {/* ✅ Submit Button */}
+              {/* Submit Button */}
               <div className="md:col-span-2 flex justify-end mt-4">
-                <Button
-                  type="submit"
-                  className="bg-black dark:bg-white text-white dark:text-black px-6 py-2"
-                >
-                  Add Product
+                <Button type="submit" className="bg-black text-white px-6 py-2">
+                  {editingProduct ? "Update Product" : "Add Product"}
                 </Button>
               </div>
             </form>
           </Form>
-
         </CardContent>
       </Card>
     </div>
